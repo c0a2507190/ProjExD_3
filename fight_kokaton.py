@@ -163,7 +163,7 @@ def main():
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    beam = None 
+    beams = []  
     score = Score()
     clock = pg.time.Clock()
     tmr = 0
@@ -172,8 +172,7 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)           
+                beams.append(Beam(bird))          
         screen.blit(bg_img, [0, 0])
 
         for i, bomb in enumerate(bombs):
@@ -186,30 +185,33 @@ def main():
                 time.sleep(1)
                 return
 
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct):
-                    bird.change_img(6, screen)
-                    pg.display.update()
-                    time.sleep(1)
-                    beam = None
-                    bombs[i] = None  
-                    score.score += 1
+            for j, beam in enumerate(beams):
+                if beam is not None:
+                    if beam.rct.colliderect(bomb.rct):
+                        bird.change_img(6, screen)
+                        pg.display.update()
+                        time.sleep(1)
+                        beams[j] = None
+                        bombs[i] = None
+                        score.score += 1
 
         bombs = [bomb for bomb in bombs if bomb is not None]
+        beams = [beam for beam in beams if beam is not None]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
+
         
-        if beam is not None:
+        for beam in beams:
             beam.update(screen)
-            
+        beams = [beam for beam in beams if check_bound(beam.rct) == (True, True)]
 
         for bomb in bombs:
             bomb.update(screen)
 
 
         score.update(screen)
-        
+
         pg.display.update()
         tmr += 1
         clock.tick(50)
